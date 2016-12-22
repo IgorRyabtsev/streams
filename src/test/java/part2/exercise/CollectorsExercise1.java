@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.*;
 
 public class CollectorsExercise1 {
 
@@ -49,6 +49,14 @@ public class CollectorsExercise1 {
         public int getDuration() {
             return duration;
         }
+
+
+    }
+
+    private static Stream<PersonPositionDuration> getPPDStream(List<Employee> employees) {
+        return employees.stream()
+                .flatMap(e -> e.getJobHistory().stream()
+                .map(entry -> new PersonPositionDuration(e.getPerson(), entry.getPosition(), entry.getDuration())));
     }
 
     // With the longest duration on single job
@@ -62,7 +70,37 @@ public class CollectorsExercise1 {
         // Collectors.toMap
         // iterate twice: stream...collect(...).stream()...
         // TODO
-        throw new UnsupportedOperationException();
+        
+        //TODO: Anonymous class
+        
+        Map<String, Person> m1 = getPPDStream(employees)
+                .collect(groupingBy(PersonPositionDuration::getPosition,
+                        collectingAndThen(
+                                maxBy(Comparator.comparing(PersonPositionDuration::getDuration))
+                                ,p -> p.get().getPerson())));
+
+        
+        Map<String, Person> m2 = getPPDStream(employees)
+              .collect(
+                      toMap(
+                              PersonPositionDuration::getPosition,
+                              Function.identity(),
+                              BinaryOperator.maxBy(Comparator.comparing(PersonPositionDuration::getDuration))
+                      )
+              )
+              .entrySet().stream()
+                .collect(toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().getPerson()
+                ));
+        
+        getPPDStream(employees)
+                .collect(new Collector<PersonPositionDuration, Map<String, Person>, Map<String, Person>>() {
+                })
+
+        return m1;
+//        throw new UnsupportedOperationException();
+
     }
 
     @Test
